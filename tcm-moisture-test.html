@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>茶研官湿气检测助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '宋体', serif;
+            background: linear-gradient(135deg, #f5f1e8 0%, #e8ddd4 100%);
+            min-height: 100vh;
+            color: #3a2922;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 2px solid #d4af37;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #8b4513;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .progress-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d4af37, #ffd700);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            color: #8b4513;
+            font-weight: bold;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px 0;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            border: 2px solid #d4af37;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-number {
+            color: #d4af37;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            color: #3a2922;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .answer-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .answer-btn {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border: 2px solid #d4af37;
+            border-radius: 25px;
+            background: linear-gradient(135deg, #fff 0%, #f8f6f0 100%);
+            color: #8b4513;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            min-width: 120px;
+        }
+
+        .answer-btn:hover {
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px 0;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            border: 2px solid #d4af37;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .result-title {
+            font-size: 2em;
+            color: #8b4513;
+            margin-bottom: 20px;
+        }
+
+        .result-level {
+            font-size: 1.5em;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: inline-block;
+        }
+
+        .level-none {
+            background: linear-gradient(135deg, #4caf50, #81c784);
+            color: white;
+        }
+
+        .level-mild {
+            background: linear-gradient(135deg, #ffeb3b, #fff176);
+            color: #8b4513;
+        }
+
+        .level-moderate {
+            background: linear-gradient(135deg, #ff9800, #ffb74d);
+            color: white;
+        }
+
+        .level-severe {
+            background: linear-gradient(135deg, #f44336, #ef5350);
+            color: white;
+        }
+
+        .suggestions {
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .suggestions h3 {
+            color: #8b4513;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .suggestions p {
+            margin-bottom: 10px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .suggestions ol {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .suggestions li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .restart-btn {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border: 2px solid #d4af37;
+            border-radius: 25px;
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .start-btn {
+            padding: 20px 50px;
+            font-size: 1.3em;
+            border: 2px solid #d4af37;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin-top: 30px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                padding: 25px 20px;
+                margin-bottom: 30px;
+            }
+            
+            .title {
+                font-size: 1.8em;
+                margin-bottom: 12px;
+            }
+            
+            .subtitle {
+                font-size: 1em;
+                line-height: 1.6;
+            }
+            
+            .question-card {
+                padding: 25px 20px;
+                margin: 15px 0;
+            }
+            
+            .question-text {
+                font-size: 1.2em;
+                margin-bottom: 25px;
+            }
+            
+            .answer-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .answer-btn {
+                width: 200px;
+                padding: 12px 30px;
+            }
+            
+            .result-card {
+                padding: 30px 20px;
+            }
+            
+            .result-title {
+                font-size: 1.6em;
+            }
+            
+            .suggestions {
+                font-size: 0.95em;
+            }
+            
+            .start-btn {
+                padding: 18px 40px;
+                font-size: 1.2em;
+            }
+        }
+
+        /* 针对手机端的额外优化 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+                border-radius: 15px;
+            }
+            
+            .title {
+                font-size: 1.6em;
+            }
+            
+            .subtitle {
+                font-size: 0.9em;
+            }
+            
+            .question-card {
+                padding: 20px 15px;
+                border-radius: 15px;
+            }
+            
+            .question-text {
+                font-size: 1.1em;
+            }
+            
+            .answer-btn {
+                width: 180px;
+                padding: 10px 25px;
+                font-size: 1em;
+            }
+            
+            .result-card {
+                padding: 25px 15px;
+                border-radius: 15px;
+            }
+            
+            .suggestions ol {
+                margin-left: 15px;
+            }
+            
+            .start-btn {
+                padding: 15px 35px;
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 开始页面 -->
+        <div id="startPage" class="start-page">
+            <div class="header">
+                <h1 class="title">茶研官湿气检测助手</h1>
+                <p class="subtitle">
+                    正所谓"千寒易去，一湿难除"，湿气是现代人患病的关键因素，也是导致现代人亚健康的罪魁祸首。<br>
+                    通过15个专业问题，科学评估您的湿气状态，为您提供个性化的祛湿建议。
+                </p>
+                <button class="start-btn" onclick="startTest()">开始检测</button>
+            </div>
+        </div>
+
+        <!-- 问题页面 -->
+        <div id="questionPage" style="display: none;">
+            <div class="progress-container">
+                <div class="progress-text">
+                    <span id="currentQuestion">1</span> / 15
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <div class="question-card" id="questionCard">
+                <div class="question-number" id="questionNumber">第1题</div>
+                <div class="question-text" id="questionText"></div>
+                <div class="answer-buttons">
+                    <button class="answer-btn" onclick="answerQuestion(true)">是</button>
+                    <button class="answer-btn" onclick="answerQuestion(false)">否</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果页面 -->
+        <div id="resultPage" style="display: none;">
+            <div class="result-card">
+                <h2 class="result-title">检测结果</h2>
+                <div class="result-level" id="resultLevel"></div>
+                <div class="suggestions" id="suggestions"></div>
+                <button class="restart-btn" onclick="restartTest()">重新测试</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            "您是否头部昏昏沉沉、没有精神、经常头晕乏力？",
+            "您是否身体发沉、四肢酸痛、无力、昏昏欲睡？",
+            "您是否嗜睡、贪睡、老是睡不醒，睡觉容易打呼噜？",
+            "您是否易便秘，大便不规律、不成型、粘连马桶？",
+            "您是否食欲不振、易反胃恶心、胃疼腹胀、消化不好，易腹泻？",
+            "您是否有时候会觉得呼吸费力、呼吸不畅，胸闷不舒？",
+            "您是否易长痘痘、色斑，毛孔粗大，眼袋浮肿，面色黄暗，泛油光？",
+            "您是否皮肤经常莫名发痒，过敏、湿疹、荨麻疹反复发作？",
+            "您是否头发才一天没洗，就容易油腻，有头屑？",
+            "您是否口干、口臭、口苦、有异味，经常泛酸恶心？",
+            "您是否早起痰多、舌苔厚腻，舌头边缘有锯齿，易口腔溃疡？",
+            "您是否牙齿偏黄、无光泽，牙龈色红，口唇偏红，或发白厚腻？",
+            "您是否腿脚容易浮肿，脚臭、汗味重、体味大？",
+            "您是否腰腹脂肪堆积，大肚腩、游泳圈、体型肥胖、臃肿？",
+            "您是否尿量少、次数少，男性阴囊潮湿或者女性白带异常？"
+        ];
+
+        let currentQuestionIndex = 0;
+        let yesAnswers = 0;
+
+        function startTest() {
+            document.getElementById('startPage').style.display = 'none';
+            document.getElementById('questionPage').style.display = 'block';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const questionNumber = document.getElementById('questionNumber');
+            const questionText = document.getElementById('questionText');
+            const currentQuestionSpan = document.getElementById('currentQuestion');
+            const progressFill = document.getElementById('progressFill');
+            
+            questionNumber.textContent = `第${currentQuestionIndex + 1}题`;
+            questionText.textContent = questions[currentQuestionIndex];
+            currentQuestionSpan.textContent = currentQuestionIndex + 1;
+            
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            progressFill.style.width = progress + '%';
+            
+            // 重新触发动画
+            const questionCard = document.getElementById('questionCard');
+            questionCard.style.opacity = '0';
+            questionCard.style.transform = 'translateY(30px)';
+            
+            setTimeout(() => {
+                questionCard.style.opacity = '1';
+                questionCard.style.transform = 'translateY(0)';
+            }, 100);
+        }
+
+        function answerQuestion(answer) {
+            if (answer) {
+                yesAnswers++;
+            }
+            
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < questions.length) {
+                setTimeout(() => {
+                    showQuestion();
+                }, 300);
+            } else {
+                setTimeout(() => {
+                    showResult();
+                }, 300);
+            }
+        }
+
+        function showResult() {
+            document.getElementById('questionPage').style.display = 'none';
+            document.getElementById('resultPage').style.display = 'block';
+            
+            const resultLevel = document.getElementById('resultLevel');
+            const suggestions = document.getElementById('suggestions');
+            
+            let level, levelClass, suggestionText;
+            
+            if (yesAnswers === 0) {
+                level = "没有湿气";
+                levelClass = "level-none";
+                suggestionText = `
+                    <h3>🎉 恭喜您！</h3>
+                    <p>您的身体非常健康，要继续保持哦。</p>
+                `;
+            } else if (yesAnswers >= 1 && yesAnswers < 3) {
+                level = "轻微湿气";
+                levelClass = "level-mild";
+                suggestionText = `
+                    <h3>💡 轻微湿气调理建议</h3>
+                    <p>十人九湿，有轻微的湿气实属正常，可以适当的增加运动量，少吹空调，烟酒适量，生冷刺激、凉性的食物少吃即可。</p>
+                `;
+            } else if (yesAnswers >= 3 && yesAnswers < 8) {
+                level = "中度湿气";
+                levelClass = "level-moderate";
+                suggestionText = `
+                    <h3>⚠️ 中度湿气调理建议</h3>
+                    <p>已经在重度湿气的边缘，身体随时有可能出现问题，除了要增加运动、少吹空调、饮食调整之外，建议可以多饮用赤小豆薏米茶等祛湿食物，以达到控制体内湿气的目的。</p>
+                    <p><strong>推荐：</strong>饮用赤小豆薏米茯苓茶祛湿茶，轻松去除湿气。</p>
+                `;
+            } else {
+                level = "严重湿气";
+                levelClass = "level-severe";
+                suggestionText = `
+                    <h3>🚨 严重湿气调理建议</h3>
+                    <p>已经为严重湿气体质，建议要做到以下几点：</p>
+                    <ol>
+                        <li>适量增加运动、戒烟戒酒为佳。</li>
+                        <li>少吹空调，少吃生冷、寒凉的食物。</li>
+                        <li>多饮用赤小豆薏米茶等祛湿食物。</li>
+                        <li>饮食少油少盐，尽量清淡为主。</li>
+                        <li>找专业的养生、中医师咨询身体状态，如有需要，可就医接受检查。</li>
+                    </ol>
+                `;
+            }
+            
+            resultLevel.textContent = level;
+            resultLevel.className = `result-level ${levelClass}`;
+            suggestions.innerHTML = suggestionText;
+        }
+
+        function restartTest() {
+            currentQuestionIndex = 0;
+            yesAnswers = 0;
+            document.getElementById('resultPage').style.display = 'none';
+            document.getElementById('startPage').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
